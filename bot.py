@@ -17,6 +17,9 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# Bot username (will be set on startup)
+BOT_USERNAME = None
+
 # Dictionary to store user warnings
 user_warnings = {}
 
@@ -61,24 +64,52 @@ async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message and update.message.text:
-        user_text = update.message.text
-        prompt = (
-            "You are a knowledgeable creator community assistant that helps with editing skills, graphic design, and content creation questions. "
-            "Reply in Burmese/Myanmar language mixed with English technical terms. "
-            "Keep your answers helpful and concise. "
-            f"User asks: {user_text}"
+    if not update.message or not update.message.text:
+        return
+
+    global BOT_USERNAME
+    if BOT_USERNAME is None:
+        bot_info = await context.bot.get_me()
+        BOT_USERNAME = bot_info.username
+
+    message = update.message
+    user_text = message.text
+    chat_type = update.effective_chat.type
+
+    # In group chats, only respond when mentioned or replied to
+    if chat_type in ['group', 'supergroup']:
+        is_mentioned = f"@{BOT_USERNAME}" in user_text
+        is_reply_to_bot = (
+            message.reply_to_message is not None
+            and message.reply_to_message.from_user is not None
+            and message.reply_to_message.from_user.username == BOT_USERNAME
         )
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
-            ai_text = response.text
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=ai_text)
-        except Exception as e:
-            logging.error(f"Error calling Gemini API: {e}")
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn't process that request right now. Please try again later.")
+
+        if not is_mentioned and not is_reply_to_bot:
+            return
+
+        # Remove bot mention from the text
+        user_text = user_text.replace(f"@{BOT_USERNAME}", "").strip()
+
+    if not user_text:
+        return
+
+    prompt = (
+        "You are a knowledgeable creator community assistant that helps with editing skills, graphic design, and content creation questions. "
+        "Reply in Burmese/Myanmar language mixed with English technical terms. "
+        "Keep your answers helpful and concise. "
+        f"User asks: {user_text}"
+    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=prompt
+        )
+        ai_text = response.text
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=ai_text, reply_to_message_id=message.message_id)
+    except Exception as e:
+        logging.error(f"Error calling Gemini API: {e}")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn't process that request right now. Please try again later.")
 
 async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
