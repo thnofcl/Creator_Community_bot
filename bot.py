@@ -1,8 +1,8 @@
 import logging
 import os
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
-from openai import OpenAI
 
 # Enable logging
 logging.basicConfig(
@@ -10,25 +10,27 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Bot Token from user input
-BOT_TOKEN = '8719927458:AAHGvTvA8xFDpHk9R-UapTI-namnvgSW2k0'
+# Bot Token
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8719927458:AAHGvTvA8xFDpHk9R-UapTI-namnvgSW2k0')
 
-# OpenAI API Key from environment variable
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Gemini API Key
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyBgHMCKfcZsg9AGct1GYsAXS159qStlnLw')
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 # Dictionary to store user warnings
 user_warnings = {}
 
 # Welcome Message
 WELCOME_MESSAGE = (
-    "Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။ \n\n"
+    "Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
     "Group rule များကို /rules နှိပ်ပြီး ဖတ်ရှုပြီးလိုက်နာပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။\n\n"
     "CC member အတူတကွ ပူးပေါင်းဖန်တီးကြမယ်။"
 )
 
 # Group Rules
 GROUP_RULES = (
+    "📋 Creator Community Group Rules\n\n"
     "1. ကုန်ပစ္စည်းရောင်းချခြင်း/ကြော်ငြာခြင်း မပြုရ\n"
     "2. ပြင်ပကြေညာများ Forward ခြင်း မပြုရ\n"
     "3. 18+ အကြောင်းအရာများ တင်ခြင်း မပြုရ (ချိုးဖောက်ရင် 2 ခါ warn တာနဲ့ ban ပါမည်)\n"
@@ -45,26 +47,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for member in update.message.new_chat_members:
         if not member.is_bot:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=WELCOME_MESSAGE)
+            if member.username:
+                mention = f"@{member.username}"
+            else:
+                mention = member.full_name
+            welcome_text = (
+                f"{mention} - Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
+                "Group rule များကို /rules နှိပ်ပြီး ဖတ်ရှုပြီးလိုက်နာပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။\n\n"
+                "CC member အတူတကွ ပူးပေါင်းဖန်တီးကြမယ်။"
+            )
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=welcome_text)
 
 async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.text:
-        prompt = f"You are a knowledgeable creator community assistant that helps with editing skills, graphic design, and content creation questions. Reply in Burmese/Myanmar language mixed with English technical terms. User asks: {update.message.text}"
+    if update.message and update.message.text:
+        user_text = update.message.text
+        prompt = (
+            "You are a knowledgeable creator community assistant that helps with editing skills, graphic design, and content creation questions. "
+            "Reply in Burmese/Myanmar language mixed with English technical terms. "
+            "Keep your answers helpful and concise. "
+            f"User asks: {user_text}"
+        )
         try:
-            response = client.chat.completions.create(
-                model="gpt-4.1-mini", # Using a suitable model, can be changed if needed
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant for a creator community."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            ai_text = response.choices[0].message.content
+            response = model.generate_content(prompt)
+            ai_text = response.text
             await context.bot.send_message(chat_id=update.effective_chat.id, text=ai_text)
         except Exception as e:
-            logging.error(f"Error calling OpenAI API: {e}")
+            logging.error(f"Error calling Gemini API: {e}")
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn't process that request right now. Please try again later.")
 
 async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -90,7 +101,7 @@ async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await context.bot.ban_chat_member(chat_id, user_to_warn_id)
             await context.bot.send_message(chat_id=update.effective_chat.id, text=f"{user_to_warn_name} သည် 2 ကြိမ်မြောက် သတိပေးခံရ၍ အဖွဲ့မှ ban ခံရပါပြီ။")
-            del user_warnings[user_to_warn_id] # Remove user from warnings after ban
+            del user_warnings[user_to_warn_id]
         except Exception as e:
             logging.error(f"Error banning user after warnings: {e}")
             await context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to ban user after warnings. Make sure the bot has admin privileges.")
