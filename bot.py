@@ -11,10 +11,10 @@ logging.basicConfig(
 )
 
 # Bot Token
-BOT_TOKEN = os.getenv('BOT_TOKEN', '8719927458:AAHGvTvA8xFDpHk9R-UapTI-namnvgSW2k0')
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 # Gemini API Key
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyD3s33BASyX68PGAnsgaE1L5sh9POsqqss')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Dictionary to store user warnings
