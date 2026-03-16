@@ -1,6 +1,6 @@
 import logging
 import os
-import google.generativeai as genai
+from google import genai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
@@ -14,9 +14,8 @@ logging.basicConfig(
 BOT_TOKEN = os.getenv('BOT_TOKEN', '8719927458:AAHGvTvA8xFDpHk9R-UapTI-namnvgSW2k0')
 
 # Gemini API Key
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyBgHMCKfcZsg9AGct1GYsAXS159qStlnLw')
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyD3s33BASyX68PGAnsgaE1L5sh9POsqqss')
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Dictionary to store user warnings
 user_warnings = {}
@@ -71,7 +70,10 @@ async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"User asks: {user_text}"
         )
         try:
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
             ai_text = response.text
             await context.bot.send_message(chat_id=update.effective_chat.id, text=ai_text)
         except Exception as e:
