@@ -6,15 +6,15 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Messa
 
 # Enable logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format=\'%(asctime)s - %(name)s - %(levelname)s - %(message)s\',
     level=logging.INFO
 )
 
 # Bot Token
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_TOKEN = os.getenv(\'BOT_TOKEN\')
 
 # Gemini API Key
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv(\'GEMINI_API_KEY\')
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Bot username (will be set on startup)
@@ -77,7 +77,7 @@ async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
 
     # In group chats, only respond when mentioned or replied to
-    if chat_type in ['group', 'supergroup']:
+    if chat_type in [\'group\', \'supergroup\']:
         is_mentioned = f"@{BOT_USERNAME}" in user_text
         is_reply_to_bot = (
             message.reply_to_message is not None
@@ -102,14 +102,14 @@ async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash-lite",
             contents=prompt
         )
         ai_text = response.text
         await context.bot.send_message(chat_id=update.effective_chat.id, text=ai_text, reply_to_message_id=message.message_id)
     except Exception as e:
         logging.error(f"Error calling Gemini API: {e}")
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn't process that request right now. Please try again later.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn\'t process that request right now. Please try again later.")
 
 async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
@@ -120,7 +120,7 @@ async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     member = await context.bot.get_chat_member(chat_id, user_id)
 
-    if member.status not in ['administrator', 'creator']:
+    if member.status not in [\'administrator\', \'creator\']:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="You must be an administrator to use this command.")
         return
 
@@ -150,7 +150,7 @@ async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     member = await context.bot.get_chat_member(chat_id, user_id)
 
-    if member.status not in ['administrator', 'creator']:
+    if member.status not in [\'administrator\', \'creator\']:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="You must be an administrator to use this command.")
         return
 
@@ -178,5 +178,5 @@ def main():
 
     application.run_polling()
 
-if __name__ == '__main__':
+if __name__ == \'__main__\':
     main()
