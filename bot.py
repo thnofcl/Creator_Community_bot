@@ -21,7 +21,7 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 BOT_USERNAME = None
 
 # Allowed group IDs (only these groups can use the bot)
-ALLOWED_GROUPS = [-1003371335863]
+ALLOWED_GROUPS = [-1003371335863, -5296350189]
 
 # Owner ID
 OWNER_ID = 6583889663
