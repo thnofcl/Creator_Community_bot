@@ -20,6 +20,12 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 # Bot username (will be set on startup)
 BOT_USERNAME = None
 
+# Allowed group IDs (only these groups can use the bot)
+ALLOWED_GROUPS = [-1003371335863]
+
+# Owner ID
+OWNER_ID = 6583889663
+
 # Dictionary to store user warnings
 user_warnings = {}
 
@@ -43,10 +49,21 @@ GROUP_RULES = (
     "8. အချင်းချင်း အကူအညီပေးပြီး အပြုသဘောဆောင်သော ဆွေးနွေးမှုများကိုသာ ပြုလုပ်ပါ"
 )
 
+def is_allowed_chat(update: Update) -> bool:
+    chat_type = update.effective_chat.type
+    if chat_type == 'private':
+        return update.effective_user.id == OWNER_ID
+    return update.effective_chat.id in ALLOWED_GROUPS
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_allowed_chat(update):
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="This bot is not authorized for this group.")
+        return
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! I am your Creator Community Bot. Type /rules to see the group rules.")
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_allowed_chat(update):
+        return
     for member in update.message.new_chat_members:
         if not member.is_bot:
             if member.username:
@@ -61,10 +78,15 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(chat_id=update.effective_chat.id, text=welcome_text)
 
 async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_allowed_chat(update):
+        return
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
+        return
+
+    if not is_allowed_chat(update):
         return
 
     global BOT_USERNAME
@@ -112,6 +134,8 @@ async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I couldn't process that request right now. Please try again later.")
 
 async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_allowed_chat(update):
+        return
     if not update.message.reply_to_message:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Please reply to the message of the user you want to warn.")
         return
@@ -142,6 +166,8 @@ async def warn_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"⚠️ {user_to_warn_name} - သတိပေးချက် {warn_count}/2 ရရှိပါပြီ။ 2 ကြိမ်မြောက် warn ရရင် ban ခံရပါမည်။")
 
 async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_allowed_chat(update):
+        return
     if not update.message.reply_to_message:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Please reply to the message of the user you want to ban.")
         return
