@@ -29,6 +29,9 @@ OWNER_ID = 6583889663
 # Dictionary to store user warnings
 user_warnings = {}
 
+# Dictionary to track /rules usage per user
+rules_usage = {}
+
 # Welcome Message
 WELCOME_MESSAGE = (
     "Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
@@ -80,6 +83,14 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed_chat(update):
         return
+
+    user_id = update.effective_user.id
+    rules_usage[user_id] = rules_usage.get(user_id, 0) + 1
+
+    if rules_usage[user_id] > 2:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Rules ကို ၂ ကြိမ် ဖတ်ပြီးပါပြီ။ ထပ်ကြည့်လို့ မရတော့ပါ။")
+        return
+
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
