@@ -87,8 +87,8 @@ async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     rules_usage[user_id] = rules_usage.get(user_id, 0) + 1
 
-    if rules_usage[user_id] > 2:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Rules ကို ၂ ကြိမ် ဖတ်ပြီးပါပြီ။ ထပ်ကြည့်လို့ မရတော့ပါ။")
+    if rules_usage[user_id] > 1:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Rules ကို ဖတ်ပြီးပါပြီ။ ထပ်ကြည့်လို့ မရတော့ပါ။")
         return
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
