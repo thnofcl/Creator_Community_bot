@@ -32,13 +32,6 @@ user_warnings = {}
 # Dictionary to track /rules usage per user
 rules_usage = {}
 
-# Welcome Message
-WELCOME_MESSAGE = (
-    "Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
-    "Group rule များကို /rules နှိပ်ပြီး ဖတ်ရှုပြီးလိုက်နာပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။\n\n"
-    "CC member အတူတကွ ပူးပေါင်းဖန်တီးကြမယ်။"
-)
-
 # Group Rules
 GROUP_RULES = (
     "📋 Creator Community Group Rules\n\n"
@@ -50,6 +43,27 @@ GROUP_RULES = (
     "6. ခေါင်းစဉ်နှင့် ကိုက်ညီပါစေ (editing, design, content creation)\n"
     "7. မူပိုင်ခွင့်ကို လေးစားပါ\n"
     "8. အချင်းချင်း အကူအညီပေးပြီး အပြုသဘောဆောင်သော ဆွေးနွေးမှုများကိုသာ ပြုလုပ်ပါ"
+)
+
+# Course Outline
+COURSE_OUTLINE = (
+    "🎬 CapCut Zero to Pro — Mobile Video Editing\n"
+    "📅 6 Weeks | 6 Modules\n\n"
+    "Module 1 — Mindset + CapCut အခြေခံ\n"
+    "Module 2 — Basic Editing (Trim, Text, Music, Transitions)\n"
+    "Module 3 — Color Grading + Effects + B-roll\n"
+    "Module 4 — Advanced Animation (Keyframes, Speed Ramp, BG Remove)\n"
+    "Module 5 — Audio, Voiceover & Auto Captions\n"
+    "Module 6 — Client Work + AI Tools + ပိုက်ဆံရှာနည်း\n\n"
+    "✅ တစ်ပတ်ကို Module 1–2 ခု + Practice\n"
+    "✅ တစ်ခုစီမှာ Assignment ပါပါတယ်\n"
+    "✅ Assets, Overlays, B-roll တွေ Free Download\n"
+    "✅ PDF Guide တွေ Free Download\n"
+    "✅ Telegram Support Group\n\n"
+    "🎯 ရလဒ် — Phone တစ်လုံးနဲ့ viral video တင်တတ်သွားမယ်၊ "
+    "client ရှာတတ်ပြီး အလုပ်သဘောတရားတွေ နားလည်သွားမယ်၊ "
+    "Editing, Social Media ကနေ ဝင်ငွေလမ်းကြောင်းတစ်ခု income ရှာတတ်သွားပါမယ်။\n\n"
+    "📩 စာရင်းသွင်းရန် — @CreatorCCA_bot ကို နှိပ်ပြီး စာရင်းသွင်းနိုင်ပါတယ်။"
 )
 
 def is_allowed_chat(update: Update) -> bool:
@@ -74,8 +88,12 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
             else:
                 mention = member.full_name
             welcome_text = (
-                f"{mention} - Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ member အသစ်များအားလုံး editing skill နှင့် graphic design ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
-                "Group rule များကို /rules နှိပ်ပြီး ဖတ်ရှုပြီးလိုက်နာပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။\n\n"
+                f"{mention} - Creator Community မှ ကြိုဆိုလိုက်ပါတယ်။ "
+                "member အသစ်များအားလုံး editing skill နှင့် graphic design "
+                "ပိုင်းဆိုင်ရာ အကူအညီများ လိုအပ်ပါက မေးမြန်းဆွေးနွေးနိုင်ပါသည်။\n\n"
+                "Group rule များကို /rules နှိပ်ပြီး ဖတ်ရှုပြီးလိုက်နာပေးပါရန် "
+                "မေတ္တာရပ်ခံအပ်ပါသည်။\n\n"
+                "🎬 သင်တန်းအကြောင်း စုံစမ်းရန် /course နှိပ်ပါ။\n\n"
                 "CC member အတူတကွ ပူးပေါင်းဖန်တီးကြမယ်။"
             )
             await context.bot.send_message(chat_id=update.effective_chat.id, text=welcome_text)
@@ -92,6 +110,31 @@ async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=GROUP_RULES)
+
+async def show_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send course outline via DM to the user who typed /course"""
+    user_id = update.effective_user.id
+    chat_type = update.effective_chat.type
+
+    try:
+        # Always send course info via DM
+        await context.bot.send_message(chat_id=user_id, text=COURSE_OUTLINE)
+
+        # If command was used in a group, notify in group that DM was sent
+        if chat_type in ['group', 'supergroup']:
+            user_name = update.effective_user.full_name
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"📩 {user_name} — သင်တန်းအချက်အလက်များကို DM သို့ ပို့ပေးပြီးပါပြီ။"
+            )
+    except Exception as e:
+        logging.error(f"Error sending course DM: {e}")
+        # If DM fails (user hasn't started the bot), notify in group
+        if chat_type in ['group', 'supergroup']:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="⚠️ DM ပို့လို့မရပါ။ ကျေးဇူးပြု၍ @CreatorCommunity_bot ကို /start နှိပ်ပြီးမှ /course ပြန်နှိပ်ပါ။"
+            )
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -209,6 +252,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
     application.add_handler(CommandHandler("rules", show_rules))
+    application.add_handler(CommandHandler("course", show_course))
     application.add_handler(CommandHandler("warn", warn_user))
     application.add_handler(CommandHandler("ban", ban_user))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, ai_response))
