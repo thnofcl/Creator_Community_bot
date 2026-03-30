@@ -136,7 +136,7 @@ async def show_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if chat_type in ['group', 'supergroup']:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="⚠️ DM ပို့လို့မရပါ။ ကျေးဇူးပြု၍ @CreatorCommunity_bot ကို /start နှိပ်ပြီးမှ /course ပြန်နှိပ်ပါ။"
+                text="⚠️ DM ပို့လို့မရပါ။ ကျေးဇူးပြု၍ @creatorCC_bot ကို /start နှိပ်ပြီးမှ /course ပြန်နှိပ်ပါ။"
             )
 
 async def ai_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
